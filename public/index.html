@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chat Integrado</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css"
+    />
+    <link href="/style.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script defer src="/script.js"></script>
+  </head>
+
+  <body>
+    <!-- Estructura principal de la página, incluyendo videoconferencia -->
+    <section class="section">
+      <div class="container">
+        <div class="columns">
+          <!-- Columna izquierda: Citas -->
+          <div class="column is-one-quarter">
+            <h2 class="title">Citas de hoy</h2>
+            <div class="box">
+              <p>12:15 Juana</p>
+              <p>Fecha: 29 de enero de 2025</p>
+              <p>Código: jkydyopqz9</p>
+              <p>ID gestor: 7</p>
+              <p>ID ciudadano: 1</p>
+              <p>Idioma: Castellano</p>
+              <button class="button is-success">Atender</button>
+              <button class="button is-danger">Finalizar</button>
+            </div>
+            <button class="button is-link is-fullwidth">Actualizar citas</button>
+          </div>
+
+          <!-- Columna central: Videoconferencia -->
+          <div class="column">
+            <h2 class="title">Videoconferencia</h2>
+            <div class="box video-box">
+              <p style="text-align: center; color: #ccc; font-size: 1.5rem;">Cámara desconectada</p>
+            </div>
+
+            <!-- Botones para control de la videoconferencia -->
+            <div class="buttons">
+              <button class="button is-primary">Grabar</button>
+              <button class="button is-danger">Parar</button>
+              <button class="button is-warning">Forzar reconexión del ciudadano</button>
+            </div>
+            <button class="button is-primary" id="openChatBtn">Abrir Chat</button>
+          </div>
+
+          <!-- Columna derecha: Documentación -->
+          <div class="column is-one-quarter">
+            <h2 class="title">Documentación</h2>
+            <div class="box">
+              <h3 class="subtitle">Aportar documentación</h3>
+              <div class="field">
+                <label class="label">Tipo de trámite</label>
+                <div class="control">
+                  <div class="select">
+                    <select>
+                      <option>Elige un tipo de trámite</option>
+                      <option>Trámite A</option>
+                      <option>Trámite B</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <button class="button is-link">Cambiar tipo</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Contenedor del chat -->
+    <div id="chatContainer">
+      <main class="section">
+        <div class="container">
+          <!-- Formulario para ingresar al chat -->
+          <form class="form-join box">
+            <div class="field">
+              <label class="label">Nombre</label>
+              <div class="control">
+                <input class="input" type="text" id="name" placeholder="Tu nombre" required />
+              </div>
+            </div>
+            <div class="field">
+              <label class="label">Sala</label>
+              <div class="control">
+                <input class="input" type="text" id="room" placeholder="Sala de chat" required />
+              </div>
+            </div>
+            <div class="field">
+              <div class="control">
+                <button class="button is-primary" type="submit">Unirse</button>
+              </div>
+            </div>
+          </form>
+
+          <!-- Mostrar mensajes del chat -->
+          <ul class="chat-display box"></ul>
+
+          <!-- Mostrar lista de usuarios y actividad -->
+          <p class="user-list"></p>
+          <p class="room-list"></p>
+          <p class="activity"></p>
+
+          <!-- Formulario para enviar mensajes -->
+          <form class="form-msg box">
+            <div class="field has-addons">
+              <div class="control is-expanded">
+                <input class="input" type="text" id="message" placeholder="Tu mensaje" required />
+              </div>
+              <div class="control">
+                <button class="button is-primary" type="submit">Enviar</button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </main>
+    </div>
+  </body>
+</html>
