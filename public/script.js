@@ -1,6 +1,6 @@
 const socket = io('ws://localhost:3500', {
   transports: ['websocket'],
-  upgrade: false
+  upgrade: false,
 });
 
 socket.on('connect_error', (error) => {
@@ -18,9 +18,9 @@ const nameInput = $('#name');
 const chatRoom = $('#room');
 const activity = $('.activity');
 const chatDisplay = $('.chat-display');
-const usersList = $('.users-list'); 
-const roomList = $('.room-list');    
+const listaCiudadanos = $('.users-list');
 
+// Enviar mensaje
 function sendMessage(e) {
   e.preventDefault();
   if (!msgInput.val().trim()) {
@@ -28,78 +28,66 @@ function sendMessage(e) {
     return;
   }
   if (nameInput.val() && msgInput.val() && chatRoom.val()) {
-      socket.emit('message', {
-          name: nameInput.val(),
-          text: msgInput.val(),
-          room: chatRoom.val()
-      });
-      msgInput.val('');
+    socket.emit('message', {
+      name: nameInput.val(),
+      text: msgInput.val(),
+    });
+    msgInput.val('');
   }
 }
 
-function enterRoom(e) {
+// Unirse a una sala
+function entrarCita(e) {
   e.preventDefault();
   if (nameInput.val() && chatRoom.val()) {
-    const room = chatRoom.val();
-
-    $.ajax({
-      url: `http://localhost:1337/api/messages?filters[room][$eq]=${room}&sort=timestamp:asc`,
-      method: 'GET',
-      success: function(response) {
-        console.log("Respuesta de Strapi:", response);
-        if (response.data && response.data.length > 0) {
-          response.data.forEach((msg) => {
-            if (msg.attributes && msg.attributes.name) {
-              const li = $('<li>').addClass('post');
-              li.html(`
-                <div class="post__header ${msg.attributes.name === nameInput.val() ? 'post__header--user' : 'post__header--reply'}">
-                  <span class="post__header--name">${msg.attributes.name}</span> 
-                  <span class="post__header--time">${new Date(msg.attributes.timestamp).toLocaleTimeString()}</span> 
-                </div>
-                <div class="post__text">${msg.attributes.text}</div>
-              `);
-              chatDisplay.append(li);
-            }
-          });
-          chatDisplay.scrollTop(chatDisplay[0].scrollHeight);
-        } else {
-          console.log("No hay mensajes en esta sala.");
-        }
-      },
-      error: function(error) {
-        console.error('Error fetching messages:', error);
-        alert('Error fetching messages. Please try again.');
-      }
-    });
-
-    socket.emit('enterRoom', {
+    socket.emit('entrarCita', {
       name: nameInput.val(),
-      room: chatRoom.val(),
+      cita: chatRoom.val(),
     });
   }
 }
 
 socket.on('message', (data) => {
-  activity.text('');
+  console.log('Datos recibidos:', data); // Verificar el contenido de `data`
   const { name, text, time } = data;
+  console.log('Tiempo recibido:', time); // Verificar el valor de `time`
+
   const li = $('<li>').addClass('post');
-  if (name === nameInput.val()) li.addClass('post--left');
-  if (name !== nameInput.val() && name !== 'Admin') li.addClass('post--right');
-  if (name !== 'Admin') {
-    li.html(`
-      <div class="post__header ${name === nameInput.val() ? 'post__header--user' : 'post__header--reply'}">
-        <span class="post__header--name">${name}</span> 
-        <span class="post__header--time">${time}</span> 
-      </div>
-      <div class="post__text">${text}</div>
-    `);
-  } else {
-    li.html(`<div class="post__text">${text}</div>`);
+
+  // Verificar si el tiempo es válido
+  let formattedTime = 'Hora desconocida';
+  if (time) {
+    const date = new Date(time);
+    if (!isNaN(date.getTime())) {
+      // Formatear la hora en formato HH:mm
+      formattedTime = new Intl.DateTimeFormat('es-ES', {
+        hour: '2-digit',
+        minute: '2-digit',
+      }).format(date);
+    }
   }
+
+  // Determinar si el mensaje es del usuario actual o de otro
+  if (name === nameInput.val()) {
+    li.addClass('post--right'); // Mensajes propios a la derecha
+  } else {
+    li.addClass('post--left'); // Mensajes de otros a la izquierda
+  }
+
+  // Construir el mensaje
+  li.html(`
+    <div class="post__text">
+      ${text}
+      <div class="post__header--time">${formattedTime}</div>
+    </div>
+  `);
+
+  // Agregar el mensaje al chat
   chatDisplay.append(li);
   chatDisplay.scrollTop(chatDisplay[0].scrollHeight);
 });
 
+// Mostrar actividad (usuario escribiendo)
 let activityTimer;
 socket.on('activity', (name) => {
   activity.text(`${name} is typing...`);
@@ -109,46 +97,28 @@ socket.on('activity', (name) => {
   }, 3000);
 });
 
-socket.on('userList', ({ users }) => {
-  showUsers(users);
-});
-
-socket.on('roomList', ({ rooms }) => {
-  showRooms(rooms);
-});
-
-function showUsers(users) {
-  usersList.text('');
+// Mostrar lista de usuarios en la sala
+socket.on('listaCiudadanos', ({ ciudadanos }) => {
+  listaCiudadanos.text('');
   if (users) {
-    usersList.html(`<em>Users in ${chatRoom.val()}:</em>`); 
-    users.forEach((user, i) => {
-      usersList.text(usersList.text() + `${user.name}`);
-      if (users.length > 1 && i !== users.length - 1) {
-        usersList.text(usersList.text() + ',');
+    listaCiudadanos.html(`<em>Users in ${chatRoom.val()}:</em>`);
+    ciudadanos.forEach((ciudadano, i) => {
+      listaCiudadanos.text(listaCiudadanos.text() + `${ciudadano.name}`);
+      if (ciudadanos.length > 1 && i !== ciudadanos.length - 1) {
+        listaCiudadanos.text(listaCiudadanos.text() + ',');
       }
     });
   }
-}
+});
 
-function showRooms(rooms) {
-  roomList.text('');
-  if (rooms) {
-    roomList.html('<em>Active Rooms:</em>');
-    rooms.forEach((room, i) => {
-      roomList.text(roomList.text() + `${room}`);
-      if (rooms.length > 1 && i !== rooms.length - 1) {
-        roomList.text(roomList.text() + ',');
-      }
-    });
-  }
-}
-
+// Manejar envío de mensajes y unión a salas
 $('.form-msg').on('submit', sendMessage);
-$('.form-join').on('submit', enterRoom);
+$('.form-join').on('submit', entrarCita);
 msgInput.on('keypress', () => {
   socket.emit('activity', nameInput.val());
 });
 
+// Mostrar/ocultar el chat
 $(document).ready(function () {
   $('#openChatBtn').click(function () {
     $('#chatContainer').toggle();
